@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite the associated article."
+title: "Reproducibility materials for gateway-level early warning of LoRaWAN link degradation"
+type: software
+authors:
+  - family-names: Karagülle
+    given-names: Esma Fazilet
+    orcid: "https://orcid.org/0009-0002-7225-9970"
+  - family-names: Günay
+    given-names: Faruk Baturalp
+    orcid: "https://orcid.org/0000-0001-5472-3608"
+    email: "baturalp@atauni.edu.tr"
+  - family-names: Odabaş Yıldırım
+    given-names: Esra
+    orcid: "https://orcid.org/0000-0002-0936-1342"
+    email: "esra.odabas@atauni.edu.tr"
+repository-code: "https://github.com/esma6/loed-lorawan-early-warning"
+date-released: 2026-09-07
+version: 1.0.0

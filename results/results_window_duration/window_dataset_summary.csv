@@ -1,0 +1,5 @@
+window,daily_csv_files,raw_packet_rows,clean_packet_rows,gateway_windows,strict_pairs,event_model_samples,gateways,dates,duplicate_gateway_windows_removed
+1min,188,11263001,11247324,290606,246152,246144,8,187,5
+5min,188,11263001,11247324,112214,110157,110148,9,187,5
+10min,188,11263001,11247324,61250,59394,59385,9,187,5
+15min,188,11263001,11247324,45905,42039,42030,9,187,5

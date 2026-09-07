@@ -1,0 +1,5 @@
+platform=Windows-11-10.0.26100-SP0
+processor=Intel64 Family 6 Model 186 Stepping 3, GenuineIntel
+python=3.12.9
+latency_scope=preprocessing+LR scoring+sigmoid calibration
+excluded=raw packet ingestion and five-minute aggregation

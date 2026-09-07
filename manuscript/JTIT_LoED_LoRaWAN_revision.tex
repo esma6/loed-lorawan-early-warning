@@ -1,0 +1,468 @@
+% !TEX TS-program = xelatex
+% =====================================================================================
+% JTIT (Journal of Telecommunications and Information Technology) article
+% Manuscript: Gateway-Level Early Warning of LoRaWAN Link Degradation Using LoED Measurements
+% Compile with XeLaTeX (Overleaf: set compiler to XeLaTeX in the lower-left menu).
+% =====================================================================================
+\documentclass{jot}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{bm}
+
+% NOTE: DOI, volume and issue are assigned by the JTIT editorial office.
+% The values below are placeholders and should be replaced on acceptance.
+\doi{\url{https://doi.org/10.26636/jtit.2026.x.xxxxx}}
+
+\Instytucja{AU} % Affiliation abbreviation
+{Atatürk University, Erzurum, Türkiye} % Affiliation data
+{https://www.atauni.edu.tr}
+
+\Author{Ph.D. student}{Esma Fazilet Karagülle} % position, name
+ {esmafazilet.karagulle17@ogr.atauni.edu.tr} % e-mail
+ {https://orcid.org/0009-0002-7225-9970} % ORCID
+ {AU} % affiliation abbreviation
+ {} % phone number if needed
+ {} % business address if needed
+ {}
+ {Department of Computer Engineering, Faculty of Engineering} % additional affiliation data
+ {} % note-list order
+
+\Author{Assistant Professor}{Faruk Baturalp Günay}
+ {baturalp@atauni.edu.tr}
+ {https://orcid.org/0000-0001-5472-3608}
+ {AU}
+ {}
+ {}
+ {}
+ {Department of Computer Engineering, Faculty of Engineering}
+ {}
+
+\Author{Assistant Professor}{Esra Odabaş Yıldırım}
+ {esra.odabas@atauni.edu.tr}
+ {https://orcid.org/0000-0002-0936-1342}
+ {AU}
+ {}
+ {}
+ {}
+ {Department of Software Engineering, Faculty of Engineering}
+ {}
+
+\Keywords{early warning, edge monitoring, link degradation, LoRaWAN}
+
+\title{Gateway-Level Early Warning of LoRaWAN Link Degradation Using LoED Measurements}
+
+\Year{2026} % year
+\Num{1} % issue (placeholder, assigned by editor)
+\Volnum{1} % volume (placeholder, assigned by editor)
+\FirstPage{1} % first page
+
+\begin{document}
+
+\maketitle
+
+\begin{Abstract}
+LoRaWAN gateways observe packet-level metadata that may support reliability monitoring without modifying end devices or the protocol stack. We formulate short-term link degradation as a next-window warning task and aggregate LoED records into five-minute gateway-windows described by CRC success rate, RSSI, SNR, spreading-factor, traffic, frequency-diversity and historical features. A degradation event is a 10\% or 20\% decrease in the following window's CRC success rate. Class-balanced Logistic Regression (LR), Random Forest, XGBoost and rule baselines are evaluated chronologically and with leave-one-gateway-out (LOGO) testing. LR obtains chronological PR-AUC values of 0.562 and 0.360, significantly exceeding the nonlinear models after Holm correction. Its LOGO means are also highest, but the differences are not statistically significant because only seven and five gateways contain both classes. Removing current CRC alone has negligible effect, whereas removing all CRC history substantially reduces performance. Performance is further characterized across four window durations, probability-calibration schemes and explicit sequence models. A causal offline replay processes held-out windows with sub-11-ms P99 scoring latency. The results support risk ranking within the LoED deployment, while gateway heterogeneity and calibration drift limit broader transfer claims.
+\end{Abstract}
+
+\section{Introduction}\label{s:1}
+LoRaWAN is widely used in low-power wide-area Internet of Things applications where long-range connectivity and low energy consumption are prioritized over high data rates \cite{1,2}. In practical deployments, however, packet reception is not constant. Duty-cycle restrictions, channel contention, interference, spreading-factor distribution, gateway placement and traffic density can jointly influence whether packets are correctly received \cite{3,4}. For monitoring applications, a short degradation in packet reception may cause missing measurements, delayed decisions, additional retransmissions or temporary gaps in downstream analytics.
+
+The operational difficulty is that a gateway sees heterogeneous packet observations rather than a direct explanation of the channel condition. A single packet outcome may be shaped by instantaneous interference or by the behavior of a particular end device. A short sequence of packets received at a gateway, by contrast, can describe the recent state of that gateway more reliably. This motivates a window-level formulation in which recent packet observations are summarized and used to rank the risk of a reliability drop in the next short interval.
+
+LoRaWAN management already includes mechanisms such as Adaptive Data Rate (ADR), which adjusts spreading factor and transmission power. Nevertheless, empirical and analytical studies have shown that ADR behavior may be slow or deployment dependent when link conditions change \cite{5,6,7}. Gateway-side monitoring should therefore be viewed as complementary to adaptation. It does not replace ADR or modify the protocol. Instead, it produces an early-warning score that may help an operator decide when closer inspection, logging, threshold adjustment or other network-management actions are warranted.
+
+We investigate whether gateway-observable metadata provides predictive information for short-term LoRaWAN link-degradation warning in the LoED deployment \cite{8}. Packet records are aggregated into five-minute gateway-windows described by reliability, signal-quality, spreading-factor, traffic, frequency-diversity and historical features. The target indicates whether the immediately following window experiences a specified drop in CRC success rate.
+
+The contribution is fourfold. First, the study defines LoRaWAN degradation warning as a strict next-window prediction problem rather than packet-level classification or retrospective link characterization. Second, all predictors are observable at a gateway, which permits implementation at the edge or network server. Third, learned models and rule baselines are evaluated under chronological and leave-one-gateway-out protocols with clustered uncertainty estimates. Fourth, alarm budgets, CRC ablations, window duration, calibration, gateway heterogeneity, explicit temporal models and streaming behavior are examined to establish the scope and operational limits of the warning score.
+
+The remainder of the paper is organized as follows. Section 2 positions the work with respect to LoRaWAN measurement studies, link adaptation, wireless link-quality estimation and edge intelligence. Section 3 describes the dataset, feature construction, label definition, models, baselines and evaluation protocols. Section 4 presents the experimental results. Section 5 discusses operational implications and limitations, and Section 6 concludes the paper.
+
+\section{Related Work}\label{s:2}
+Measurement-based studies have shown that LoRaWAN reliability is shaped by both protocol constraints and deployment-specific conditions. Adelantado \textit{et al.} discuss duty-cycle restrictions, interference, scalability limits and traffic-load effects in LoRaWAN networks \cite{3}, while Blenn and Kuipers analyze operational traffic from The Things Network and report substantial spatial and temporal variability in real deployments \cite{4}. Spadaccino \textit{et al.} further show that LoRaWAN traffic traces may contain behavior that is difficult to interpret from protocol configuration alone \cite{9}. These studies indicate that reliability monitoring should not rely only on static link assumptions, because packet reception may vary across time, gateway location and traffic conditions.
+
+The LoED dataset contains packet observations from an urban LoRaWAN deployment, including reception time, gateway identifier, CRC status, RSSI, SNR, spreading factor, frequency and payload size \cite{8}. These fields are normally available at gateways and allow degradation-risk analysis without application-payload inspection, device-side state or protocol modification. Packet observations are aggregated into short gateway-specific windows rather than treated as independent classification instances, so each monitoring state represents recent reception behavior.
+
+LoRaWAN reliability has also been studied through link adaptation. Adaptive Data Rate adjusts parameters such as spreading factor and transmit power according to network conditions, but previous work has shown that ADR may respond slowly when channel conditions change \cite{5}. Several extensions and analytical studies have therefore examined ways to improve fairness, robustness or resource use in LoRaWAN parameter selection \cite{6,7}. These studies address an important control problem: how communication parameters should be configured once link conditions are observed or inferred. A complementary monitoring objective is considered here: rather than proposing a new ADR mechanism, the analysis tests whether gateway-observable metadata can provide an early warning that the next short time interval is likely to experience a drop in CRC reliability.
+
+Machine learning has been used more broadly for wireless link-quality estimation and monitoring. Cerar \textit{et al.} review learning-based link-quality estimators and emphasize the importance of feature design, class imbalance and evaluation methodology \cite{10}. Related work on link-quality classification also shows that reported performance can depend on the data distribution and evaluation protocol \cite{11}. Temporal models such as LSTM have been considered for link-quality estimation \cite{12}, and LoRaWAN-specific learning studies have used RSSI and SNR for tasks such as spreading-factor prediction \cite{13}. Recent surveys of data-driven LoRaWAN solutions likewise identify forecasting the future network state from current and historical observations as a key direction \cite{14}, and explainable, lightweight learning models have been advocated for LoRaWAN link analysis \cite{15}. Compared with these directions, the present study uses a narrower operational target: it predicts whether the CRC success rate of the next gateway-window will decrease by a specified amount. The unit of analysis is therefore a gateway-window, not an individual packet, device, link-quality class or communication-parameter decision.
+
+The proposed formulation is also consistent with edge-intelligence principles. Moving lightweight analysis toward the edge may reduce latency and bandwidth use while supporting local decision-making \cite{16}. Recent JTIT work on the LoRaCog framework similarly illustrates the value of assigning sensing and decision-support functions to gateways in LoRa-related systems \cite{17}. In the present study, this idea is applied to reliability monitoring: a gateway or network server can transform recently observed metadata into a degradation-risk score and use that score for alarm prioritization. The emphasis is therefore on deployable risk ranking rather than on complex model design.
+
+Taken together, prior work has characterized LoRaWAN behavior, improved link adaptation and developed learning-based link-quality estimators, but short-horizon degradation warning based only on gateway-observable LoED measurements remains less directly explored. This study addresses that gap by defining strict next-window degradation labels, applying temporally ordered and leave-one-gateway-out evaluation protocols, comparing learned models with simple rule-based baselines, analyzing alarm-budget behavior and testing the sensitivity of the model to CRC-derived features. Tab. 1 summarizes the position of the proposed study with respect to the main related research directions.
+
+\begin{table*}[t]
+\Caption{Position of the proposed study with respect to related research directions.}\tlabel{1}
+\centering
+\begin{tabular}{@{}p{2.7cm}p{3.7cm}p{4.0cm}p{4.3cm}@{}}
+\toprule
+Research direction & Typical objective & Main limitation for this study & Position of this paper \\
+\midrule
+LoRaWAN measurement studies & Characterize protocol behavior and real traffic variability & Mostly descriptive or retrospective & Uses real LoED observations for predictive warning \\
+ADR and link adaptation & Select spreading factor or transmit power & Focuses on control, not early warning & Provides a risk score that can precede control actions \\
+Wireless LQE with ML & Estimate link quality or packet delivery & Often packet/link-class focused & Predicts next-window CRC degradation \\
+Edge intelligence & Move inference closer to the network edge & Often architectural or application-level & Uses lightweight gateway-window features \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\section{Materials and Methods}\label{s:3}
+Fig. 1 summarizes the overall gateway-level early-warning pipeline used in this study, from LoED packet records to alarm-oriented evaluation. The following subsections describe each stage in detail.
+
+\begin{figure}[t]
+\ffig[width=83mm]{fig1.png}[0mm]
+\Caption{Gateway-level early-warning pipeline used in the proposed LoRaWAN monitoring framework.}\flabel{1}
+\end{figure}
+
+\subsection{LoED dataset and preprocessing}\label{s:3.1}
+The experiments use the full LoED dataset, which contains gateway-side LoRaWAN packet observations collected in a dense urban environment \cite{8}. Each packet record includes metadata such as reception time, gateway identifier, CRC status, frequency, spreading factor, RSSI, SNR and payload size. CRC status is converted into a binary packet-success indicator and then aggregated at the gateway-window level. Physically implausible RSSI and SNR values are removed before aggregation, and spreading factors outside the LoRa operating range are treated as missing.
+
+The processing pipeline used 188 daily CSV files and produced 112,214 five-minute gateway-window samples before strict next-window alignment. Since the dataset is organized as daily files rather than as a continuous uninterrupted trace, target construction keeps only those window pairs for which the following gateway-window exists exactly five minutes after the current one. This prevents artificial labels from being created across gaps or between disconnected daily traces.
+
+After alignment, 110,157 valid current-next gateway-window pairs remain across nine gateways and 187 collection dates, spanning 2019-02-08 to 2020-09-02. The dataset scale is useful for studying rare degradation events, but it also creates class imbalance. The severe 20\% CRC-drop event appears in only a small fraction of the windows. Therefore, the evaluation emphasizes ranking and detection metrics rather than raw accuracy.
+
+\begin{table}[t]
+\Caption{Dataset and event-summary statistics.}\tlabel{2}
+\centering
+\begin{tabular}{@{}lc@{}}
+\toprule
+Item & Value \\
+\midrule
+Daily CSV files processed & 188 \\
+Gateway-window samples before strict alignment & 112,214 \\
+Valid current-next gateway-window pairs & 110,157 \\
+Gateways & 9 \\
+Collection dates & 187 \\
+Moderate degradation event rate ($\theta = 0.10$) & 9.69\% \\
+Severe degradation event rate ($\theta = 0.20$) & 2.70\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Gateway-window feature representation}\label{s:3.2}
+Packet records are grouped by gateway and five-minute interval. Windows with fewer than ten packets are excluded to avoid unstable CRC-rate estimates. For every retained window, four feature groups are extracted. Reliability and traffic features include packet count, payload-size statistics and current CRC success rate. Radio features include summary statistics of RSSI and SNR. Transmission features include spreading-factor statistics, spreading-factor ratios and frequency diversity. Temporal context features include hour, day of week, previous CRC success rate, previous CRC change, rolling CRC mean and standard deviation, and rolling RSSI/SNR means.
+
+The feature set is intentionally limited to information already observable at gateways. No application payload content, device-side state or future packet information is used. Frequency diversity is included because changes in frequency use may reflect channel-selection and traffic behavior. Spreading-factor ratios summarize the distribution of observed link-adaptation states. RSSI and SNR provide radio context, while packet count represents the support available for estimating reliability in a window.
+
+All temporal features are computed using only the current or past windows. The next-window CRC success rate is used only to construct the label. The gateway identifier is treated as a categorical variable; in leave-one-gateway-out testing, unseen gateway categories are ignored by the encoder, preventing the held-out gateway label from being memorized.
+
+\subsection{Degradation event definition}\label{s:3.3}
+Let $c(g,t)$ denote the CRC success rate for gateway $g$ in current window $t$. The target is derived from the immediately following window $t+1$, which must exist exactly five minutes later for the same gateway. For a threshold $\theta$, the degradation event is defined as a decrease of at least $\theta$ in the next-window CRC success rate, as given in \eref{e1}:
+
+\begin{equation}\elabel{e1}
+y(g,t;\theta) = 1 \ \text{if}\ c(g,t+1) \le c(g,t) - \theta,\ \text{and}\ 0\ \text{otherwise.}
+\end{equation}
+
+Two thresholds are evaluated. The 10\% threshold represents moderate short-term degradation, while the 20\% threshold represents a rarer and more severe event. These thresholds are not presented as universal service-level objectives. They are used to test whether the proposed pipeline can identify both frequent moderate degradation and less frequent severe degradation. In a deployment, $\theta$ should be selected according to the reliability tolerance of the application.
+
+Because the task is imbalanced, PR-AUC, recall and alarm-oriented operating points are more informative than accuracy alone. A classifier that always predicts no degradation can appear accurate under the severe threshold while failing to detect any event.
+
+\subsection{Models, baselines and evaluation protocols}\label{s:3.4}
+Logistic Regression with class balancing is used as the primary model because it provides a low-cost risk score that is straightforward to deploy and inspect. Numeric features are median-imputed, and Logistic Regression additionally uses standardization. Random Forest and XGBoost are included as nonlinear alternatives, with XGBoost serving as a common high-performing tabular baseline \cite{18}. Because class balancing changes the probability scale, calibration is evaluated separately rather than assumed from ranking performance.
+
+Four rule-based baselines are evaluated: Always No-Drop, Previous-Drop Rule, Current-Low Rule and Trend-Down Rule. Always No-Drop represents the accuracy trap in imbalanced monitoring. Previous-Drop predicts risk when the previous change already exceeded the same threshold. Current-Low uses a low current CRC success rate, below 0.5, as a simple alarm. Trend-Down predicts risk when the current CRC state is still acceptable, at least 0.5, but the recent change is negative. These baselines test whether learning provides information beyond simple temporal heuristics.
+
+Two evaluation protocols are used. The time-based split trains on the earliest 70\% of collection dates and tests on the remaining 30\%. This evaluates within-deployment forecasting over later dates. The leave-one-gateway-out protocol trains on all but one gateway and tests on the held-out gateway. Since some held-out gateways contain only one event class for a threshold, the transfer summary is reported over binary-test gateways where both event and non-event samples are present.
+
+The operating-point analysis treats the Logistic Regression output as a ranked alarm score. For a fixed alarm budget, such as the top 5\% or top 10\% highest-risk windows, the analysis measures how many degradation events are captured. A complementary fixed-recall view measures the alert rate required to capture a target fraction of degradation events. This is closer to how a monitoring dashboard would use the model than a single universal probability threshold.
+
+\subsection{Implementation and reproducibility controls}\label{s:3.5}
+All models are trained on the same feature matrix and threshold-specific labels. Logistic Regression uses a class-balanced loss and the liblinear solver with a maximum of 5000 iterations. Random Forest uses 300 trees, maximum depth 8, minimum leaf size 8 and class balancing. XGBoost uses 300 trees, maximum depth 3, learning rate 0.03, subsampling 0.9, column sampling 0.9 and a positive-class weight computed from the training split. These settings are intentionally moderate to avoid turning the study into a hyperparameter-search exercise.
+
+Preprocessing is fitted only on the training portion of each split. This rule applies to imputation, scaling and categorical encoding in the time-based split, leave-one-gateway-out evaluation, ablation experiments and operating-point analysis. The reported results therefore reflect the score that would be available when a model is trained on past dates or on other gateways and then applied to held-out evaluation data.
+
+\subsection{Extended validation design}\label{s:3.6}
+Statistical uncertainty is evaluated at the level of independent collection units rather than individual gateway-windows. For chronological evaluation, confidence intervals and paired model differences are estimated by resampling the 57 held-out collection dates as clusters. LOGO intervals use held-out gateways as the resampling unit, and model differences are assessed with exact two-sided sign-flip tests. Holm correction is applied within each threshold, metric and comparison family.
+
+Feature sensitivity is examined through seven LR specifications: the complete representation, current CRC alone, omission of current CRC, omission of current and rolling CRC summaries, omission of all CRC-derived variables, current-window radio variables alone, and delayed radio variables alone. Temporal-resolution sensitivity is evaluated by reconstructing the data at 1, 5, 10 and 15 minute intervals while retaining the ten-packet minimum and exact next-window alignment. Because interval length changes the forecast horizon, prevalence and eligible sample population, these settings are interpreted as related operational tasks rather than paired hyperparameter trials.
+
+Probability calibration is quantified with reliability diagrams, Brier score and ten-bin expected calibration error (ECE). A leakage-controlled recalibration experiment fits LR on the earliest 56\% of dates, estimates sigmoid and isotonic mappings on the next 14\%, and evaluates them on the untouched final 30\%. In LOGO evaluation, recalibration uses only dates from the training gateways. Observable event precursors are compared after robust within-gateway standardization using Cliff's delta; these associations are descriptive and are not treated as physical-cause estimates.
+
+Two explicit sequence models use six exactly contiguous gateway-windows, corresponding to 30 minutes of history. Sequence LR operates on the flattened lag vector, whereas a compact gated recurrent unit (GRU) uses 16 hidden units and early stopping on later training dates. Finally, an offline replay processes final-test gateway-windows in timestamp order. Its latency measurement covers imputation, scaling, categorical encoding, LR inference and sigmoid calibration, but excludes raw-packet ingestion and window aggregation.
+
+\section{Results}\label{s:4}
+Throughout this section, performance is reported using precision, recall, F1, ROC-AUC and PR-AUC. Because degradation events are rare, PR-AUC, recall and the alarm-budget operating points are treated as the primary indicators, in line with the class-imbalance considerations discussed in Section 3.3.
+
+\subsection{Time-based evaluation}\label{s:4.1}
+Tab. 3 reports the chronological test results for the three learned models. Logistic Regression provides the strongest overall risk ranking. For the 10\% threshold, it reaches 0.923 ROC-AUC, 0.562 PR-AUC and 0.928 recall. For the rarer 20\% threshold, it reaches 0.959 ROC-AUC, 0.360 PR-AUC and 0.937 recall. Precision is lower at the severe threshold because events are rare and the class-balanced model is tuned toward high sensitivity.
+
+The nonlinear alternatives do not consistently improve alarm-ranking metrics. XGBoost is competitive at the 10\% threshold, but Logistic Regression gives the highest PR-AUC at both thresholds. Date-clustered paired bootstrap comparisons confirm that LR exceeds RF and XGBoost for PR-AUC and ROC-AUC at both thresholds after Holm correction ($p_{\mathrm{Holm}}=0.002$). The absence of a consistent nonlinear advantage favors the linear model for resource-constrained edge deployment, where inference and maintenance costs are relevant.
+
+The time-based results should be interpreted as within-deployment forecasting rather than universal generalization. They show that recent radio, traffic and reliability history contain enough information to rank near-future degradation risk when the model has observed earlier windows from the same deployment period.
+
+\begin{table*}[t]
+\Caption{Time-based early-warning performance.}\tlabel{3}
+\centering
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+$\theta$ & Model & Precision & Recall & F1 & ROC-AUC & PR-AUC \\
+\midrule
+0.10 & LR & 0.296 & 0.928 & 0.449 & 0.923 & 0.562 \\
+0.10 & RF & 0.264 & 0.886 & 0.407 & 0.889 & 0.436 \\
+0.10 & XGBoost & 0.296 & 0.866 & 0.441 & 0.902 & 0.497 \\
+0.20 & LR & 0.131 & 0.937 & 0.229 & 0.959 & 0.360 \\
+0.20 & RF & 0.129 & 0.763 & 0.220 & 0.923 & 0.226 \\
+0.20 & XGBoost & 0.123 & 0.844 & 0.215 & 0.937 & 0.304 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Leave-one-gateway-out evaluation}\label{s:4.2}
+Tab. 4 reports leave-one-gateway-out performance on binary-test gateways. This protocol is harder because the model is evaluated on a gateway location not observed during training. Logistic Regression gives the highest PR-AUC and ROC-AUC for both thresholds. XGBoost produces higher recall, but with lower precision and lower PR-AUC, indicating more aggressive alerting.
+
+The performance gap between the chronological and leave-one-gateway-out settings is a key operational finding. It shows that LoRaWAN degradation warning is partly deployment-specific. LR has the highest observed mean LOGO PR-AUC at both thresholds, but paired gateway tests do not remain significant after Holm correction. A lightweight model can transfer some risk information across gateways, but the alarm threshold should be calibrated with local gateway data before operational use.
+
+This decline should not be treated only as a failure. A gateway installed at a different location may observe different interference patterns, traffic levels and RSSI/SNR distributions. The leave-one-gateway-out protocol exposes this deployment shift and prevents overclaiming. The results therefore support a cautious deployment message: the representation transfers, but direct threshold reuse across gateways is not sufficient.
+
+\begin{table*}[t]
+\Caption{Leave-one-gateway-out performance on binary-test gateways.}\tlabel{4}
+\centering
+\begin{tabular}{@{}ccccccc@{}}
+\toprule
+$\theta$ & Model & Precision & Recall & F1 & ROC-AUC & PR-AUC \\
+\midrule
+0.10 & LR & 0.310 & 0.492 & 0.339 & 0.785 & 0.402 \\
+0.10 & RF & 0.244 & 0.657 & 0.344 & 0.774 & 0.369 \\
+0.10 & XGBoost & 0.253 & 0.669 & 0.353 & 0.766 & 0.367 \\
+0.20 & LR & 0.256 & 0.704 & 0.305 & 0.865 & 0.355 \\
+0.20 & RF & 0.239 & 0.591 & 0.231 & 0.823 & 0.264 \\
+0.20 & XGBoost & 0.182 & 0.804 & 0.282 & 0.837 & 0.299 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Baseline comparison}\label{s:4.3}
+Tab. 5a and Tab. 5b compare the learned model with simple edge-deployable rules under the time-based and leave-one-gateway-out protocols, respectively. Always No-Drop can obtain high accuracy when degradation is rare, but it cannot detect any event. Current-Low, Previous-Drop and Trend-Down rules capture limited portions of the event set and yield lower PR-AUC values. Logistic Regression therefore extracts additional signal beyond trivial temporal rules while remaining simple enough for gateway-level deployment. For the rule baselines, precision and recall follow from the binary rule decision, whereas PR-AUC is computed from the associated graded score: a constant for Always No-Drop, the binary output for Previous-Drop, one minus the current CRC success rate for Current-Low, and the magnitude of the recent CRC change for Trend-Down. A weakly informative or anti-correlated score can therefore yield a PR-AUC below the event prevalence, as observed for the Trend-Down rule, which is consistent with short-term mean reversion in the window-level CRC success rate.
+
+\begin{table}[t]
+\setcounter{table}{4}\renewcommand{\thetable}{5a}
+\Caption{Baseline comparison for alarm detection under the time-based split.}\tlabel{5a}
+\centering
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$\theta$ & Model & Precision & Recall & PR-AUC \\
+\midrule
+0.10 & AlwaysNoDrop & 0.000 & 0.000 & 0.098 \\
+0.10 & CurrentLowRule & 0.116 & 0.440 & 0.124 \\
+0.10 & PrevDropRule & 0.035 & 0.035 & 0.096 \\
+0.10 & TrendDownRule & 0.137 & 0.078 & 0.059 \\
+0.10 & LR & 0.296 & 0.928 & 0.562 \\
+0.20 & AlwaysNoDrop & 0.000 & 0.000 & 0.020 \\
+0.20 & CurrentLowRule & 0.016 & 0.291 & 0.022 \\
+0.20 & PrevDropRule & 0.000 & 0.000 & 0.020 \\
+0.20 & TrendDownRule & 0.019 & 0.050 & 0.011 \\
+0.20 & LR & 0.131 & 0.937 & 0.360 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\setcounter{table}{4}\renewcommand{\thetable}{5b}
+\Caption{Baseline comparison for alarm detection under the leave-one-gateway-out split.}\tlabel{5b}
+\centering
+\begin{tabular}{@{}ccccc@{}}
+\toprule
+$\theta$ & Model & Precision & Recall & PR-AUC \\
+\midrule
+0.10 & AlwaysNoDrop & 0.000 & 0.000 & 0.164 \\
+0.10 & CurrentLowRule & 0.050 & 0.141 & 0.108 \\
+0.10 & PrevDropRule & 0.047 & 0.047 & 0.156 \\
+0.10 & TrendDownRule & 0.127 & 0.149 & 0.108 \\
+0.10 & LR & 0.310 & 0.492 & 0.402 \\
+0.20 & AlwaysNoDrop & 0.000 & 0.000 & 0.078 \\
+0.20 & CurrentLowRule & 0.016 & 0.172 & 0.048 \\
+0.20 & PrevDropRule & 0.005 & 0.005 & 0.077 \\
+0.20 & TrendDownRule & 0.053 & 0.070 & 0.046 \\
+0.20 & LR & 0.256 & 0.704 & 0.355 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Alarm-oriented operating points}\label{s:4.4}
+Since the task is imbalanced, the model is best interpreted as an alarm-ranking score. Fig. 2 and Tab. 6 show how many events are captured when only the highest-risk windows are selected. Under time-based evaluation, alerting the top 10\% highest-risk windows captures 55.0\% of moderate degradation events and 85.3\% of severe degradation events. These values correspond to lifts of 5.50 and 8.53 over random alerting. In leave-one-gateway-out testing, the same 10\% budget captures 31.4\% and 47.9\% of the events, respectively. The severe-event PR-AUC of 0.360 is substantially above the 2.05\% test prevalence, while the 17.5\% precision at a 10\% alarm budget means that approximately one in six selected windows precedes a severe drop. This confirms useful risk concentration while quantifying the review burden created by false alarms.
+
+Tab. 7 provides a complementary fixed-recall view. To capture 80\% of severe time-based events, only 8.1\% of windows need to be alerted, with 0.203 precision. For unseen gateways, the required alert rate increases, again showing that transfer requires deployment-specific calibration.
+
+These operating points are more actionable than a single default classification threshold. A network operator may decide that severe degradation is costly and accept a larger alert budget, or restrict alerts when manual inspection is expensive. The model score can therefore be used to rank windows for monitoring attention even when absolute probability calibration remains imperfect.
+
+\begin{figure}[t]
+\ffig[width=83mm]{fig2.png}[0mm]
+\Caption{Degradation events captured at top-risk alarm budgets for time-based and leave-one-gateway-out settings.}\flabel{2}
+\end{figure}
+
+\begin{table*}[t]
+\setcounter{table}{5}\renewcommand{\thetable}{\arabic{table}}
+\Caption{Top-risk alarm-budget operating points for Logistic Regression.}\tlabel{6}
+\centering
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+Split & $\theta$ & Budget (\%) & Precision & Recall & Lift \\
+\midrule
+Time & 0.10 & 5 & 0.655 & 0.335 & 6.704 \\
+Time & 0.10 & 10 & 0.538 & 0.550 & 5.503 \\
+Time & 0.20 & 5 & 0.273 & 0.667 & 13.341 \\
+Time & 0.20 & 10 & 0.175 & 0.853 & 8.526 \\
+LOGO & 0.10 & 5 & 0.526 & 0.192 & 3.827 \\
+LOGO & 0.10 & 10 & 0.470 & 0.314 & 3.142 \\
+LOGO & 0.20 & 5 & 0.441 & 0.309 & 6.125 \\
+LOGO & 0.20 & 10 & 0.347 & 0.479 & 4.787 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\Caption{Fixed-recall operating points for Logistic Regression.}\tlabel{7}
+\centering
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+Split & $\theta$ & Alert rate for 80\% recall & Precision & Achieved recall & Lift \\
+\midrule
+Time & 0.10 & 20.2\% & 0.388 & 0.800 & 3.970 \\
+Time & 0.20 & 8.1\% & 0.203 & 0.801 & 9.920 \\
+LOGO & 0.10 & 45.4\% & 0.287 & 0.803 & 1.792 \\
+LOGO & 0.20 & 27.6\% & 0.220 & 0.809 & 3.049 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Feature-level interpretation and ablation}\label{s:4.5}
+The standardized Logistic Regression coefficients indicate that recent CRC behavior, SNR, RSSI, packet count and frequency diversity are associated with degradation risk. Fig. 3 shows the most influential standardized coefficients for $\theta = 0.10$. The largest positive coefficients are related to the current and previous CRC state, while several radio and traffic features also contribute. The coefficients should not be interpreted as causal root-cause explanations; they describe a state-tracking model for short-horizon warning.
+
+The ablation in Tab. 8 removes current CRC and rolling CRC features while retaining one-step previous CRC terms. Performance decreases but does not collapse. Time-based PR-AUC changes from 0.562 to 0.510 for $\theta = 0.10$ and from 0.360 to 0.308 for $\theta = 0.20$. Leave-one-gateway-out PR-AUC changes from 0.402 to 0.368 and from 0.355 to 0.328, respectively. Thus, CRC history is informative, but the warning signal is not determined exclusively by current and rolling CRC statistics.
+
+Because the label is a future CRC success-rate drop, current and recent CRC states are plausible predictors. An important question is whether the model provides information beyond the current CRC level. Removing current CRC alone has negligible effect, whereas removing all CRC-derived history causes a large and statistically significant chronological PR-AUC reduction. Radio and traffic context retain weaker predictive information.
+
+\begin{figure}[t]
+\ffig[width=83mm]{fig3.png}[0mm]
+\Caption{Most influential standardized Logistic Regression coefficients for $\theta = 0.10$. Gateway identifiers are excluded from the plot.}\flabel{3}
+\end{figure}
+
+\begin{table*}[t]
+\Caption{Sensitivity to removing current and rolling CRC features.}\tlabel{8}
+\centering
+\begin{tabular}{@{}cccccc@{}}
+\toprule
+Split & $\theta$ & Feature setting & Recall & ROC-AUC & PR-AUC \\
+\midrule
+Time & 0.10 & Full features & 0.928 & 0.923 & 0.562 \\
+Time & 0.20 & Full features & 0.937 & 0.959 & 0.360 \\
+Time & 0.10 & Without current/rolling CRC & 0.929 & 0.903 & 0.510 \\
+Time & 0.20 & Without current/rolling CRC & 0.905 & 0.946 & 0.308 \\
+LOGO & 0.10 & Full features & 0.492 & 0.785 & 0.402 \\
+LOGO & 0.20 & Full features & 0.704 & 0.865 & 0.355 \\
+LOGO & 0.10 & Without current/rolling CRC & 0.398 & 0.736 & 0.368 \\
+LOGO & 0.20 & Without current/rolling CRC & 0.609 & 0.835 & 0.328 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\subsection{Statistical uncertainty and cross-gateway variation}\label{s:4.6}
+
+The clustered analysis confirms that the chronological ranking differences are not attributable solely to the large number of correlated windows. LR reaches a PR-AUC of 0.561 (95\% CI 0.542--0.580) for $\theta=0.10$ and 0.360 (0.320--0.401) for $\theta=0.20$. Its paired PR-AUC and ROC-AUC differences relative to RF and XGBoost remain significant after Holm correction ($p_{\mathrm{Holm}}=0.002$). The corresponding LOGO PR-AUC intervals are substantially wider, at 0.402 (0.234--0.559) and 0.355 (0.299--0.419). Although the LOGO means favor LR, neither comparison remains significant after multiplicity correction. This distinction indicates stable within-deployment separation but greater uncertainty when the deployment location is withheld.
+
+The fold-level results in Fig. \fref{4} reveal that cross-gateway variation extends beyond average discrimination. Moderate-event prevalence ranges from 0.8\% to 29.7\% among evaluable gateways. On the two lowest-prevalence gateways, LR retains ROC-AUC values of 0.799 and 0.691, yet its default decision threshold produces zero recall. Several higher-prevalence gateways instead exceed 0.91 recall. Thus, useful ordering of risk can coexist with an unsuitable operating threshold when prevalence and feature distributions change.
+
+\begin{figure}[t]
+\ffig[width=83mm]{fig_gateway_pr_auc.png}[0mm]
+\Caption{Per-gateway PR-AUC under leave-one-gateway-out evaluation. Only gateways containing both classes are shown.}\flabel{4}
+\end{figure}
+
+\subsection{Dependence on reliability history}\label{s:4.7}
+
+The expanded ablation analysis separates the current CRC measurement from its temporal history. Omitting current CRC changes chronological PR-AUC by less than 0.0001 at both thresholds, showing that the fitted classifier is not equivalent to a current-state threshold. By contrast, omission of every CRC-derived historical variable lowers PR-AUC from 0.561 to 0.276 for $\theta=0.10$ and from 0.360 to 0.106 for $\theta=0.20$. Both reductions remain significant after Holm correction ($p_{\mathrm{Holm}}=0.012$). Models restricted to current or delayed RSSI and SNR retain limited chronological discrimination but transfer weakly across gateways. The predictive representation is therefore dominated by recent reliability dynamics, with radio and traffic measurements providing secondary context.
+
+\subsection{Sensitivity to temporal resolution}\label{s:4.8}
+
+Window duration changes both the warning horizon and the statistical support available for feature estimation. One-minute windows achieve the highest chronological PR-AUC, reaching 0.640 and 0.484 for the moderate and severe outcomes, respectively. However, the fixed ten-packet requirement removes one gateway and reduces the number of evaluable LOGO folds. At five minutes, all nine gateways are retained and severe-event LOGO PR-AUC has the smallest between-gateway standard deviation. Ten-minute windows provide more evaluable severe-event folds but greater PR-AUC dispersion, whereas fifteen-minute aggregation reduces severe-event prevalence to 0.63\% in the chronological test and PR-AUC to 0.041. These patterns favor five minutes as a balance between warning time, packet support and cross-gateway stability, without implying a universally optimal interval.
+
+\subsection{Probability calibration}\label{s:4.9}
+
+Ranking discrimination does not translate directly into calibrated probability estimates. In the severe chronological test, the event prevalence is 2.05\%, while the mean output of the class-balanced LR is 18.45\%. Its reliability curve lies below the identity line over most score strata, and the equal-frequency ECE is 0.164. Temporal sigmoid recalibration reduces the ECE to 0.019 for moderate degradation and 0.003 for severe degradation; the corresponding Brier scores decrease to 0.062 and 0.016. Similar improvement occurs in pooled LOGO predictions, although residual fold variation remains. Consequently, the uncalibrated output is suitable for ranking, whereas probability-based decisions require calibration data representative of the target gateway and operating period.
+
+\subsection{Gateway-observable precursors}\label{s:4.10}
+
+Within-gateway comparisons provide additional context for the learned risk function. Degradation windows are associated with lower packet counts and lower frequency diversity, with Cliff's delta values of $-0.119$ and $-0.128$ for moderate events and $-0.230$ and $-0.179$ for severe events. Current and lagged RSSI/SNR effects are smaller. The largest standardized association is the preceding CRC change, with delta values of 0.482 and 0.579, indicating that many labeled drops follow short-term reliability oscillation rather than a monotonic decline. Packet-size differences may additionally reflect changes in traffic or device composition. These measurements characterize observable precursors; they cannot distinguish interference, collision, mobility, weather or hardware mechanisms that are not recorded by LoED.
+
+\subsection{Explicit sequence modeling}\label{s:4.11}
+
+Explicit use of 30 minutes of contiguous history produces only setting-dependent gains. On the common chronological sample, the GRU increases PR-AUC from 0.568 to 0.573 for moderate degradation and from 0.372 to 0.380 for severe degradation. Its LOGO mean rises from 0.414 to 0.422 for the moderate outcome but falls from 0.377 to 0.372 for the severe outcome. Sequence LR reaches the highest severe-event LOGO mean, 0.405, while reducing moderate-event PR-AUC in both evaluation protocols. Neither sequence formulation consistently dominates the feature-based LR. The compact LR is therefore retained as the primary model because its discrimination is comparable across tasks and its inference path is simpler.
+
+\subsection{Offline streaming feasibility}\label{s:4.12}
+
+The chronological replay processes 35,776 final-test gateway-windows in 16,277 timestamp batches. Mean preprocessing, LR inference and sigmoid-calibration latency is 5.51 ms per batch for moderate degradation and 4.43 ms for severe degradation; the corresponding P99 values remain below 11 ms. A score cutoff selected from development data for a nominal 10\% alarm budget yields test alert rates of 5.5\% and 6.5\%, capturing 35.6\% and 73.0\% of moderate and severe events. The scoring cost is negligible relative to a five-minute interval on the evaluation computer, but the lower realized alarm rates expose temporal movement in the score distribution. Operational deployment would therefore require threshold monitoring in addition to efficient inference.
+
+\section{Discussion}\label{s:5}
+Three observations emerge. First, a class-balanced linear model can rank short-horizon degradation risk within the LoED deployment using gateway-observable features, without payload inspection, end-device modification or deep neural inference.
+
+Second, the gap between chronological and LOGO evaluation shows that the mapping from metadata to degradation is deployment-specific. The model retains non-random ranking on unseen gateways, but large differences in prevalence, recall and PR-AUC require local calibration, periodic threshold review or gateway-specific operating points.
+
+Third, the alarm-budget analysis is more informative than fixed-threshold classification. Operators may not require a binary decision at a universal threshold. Instead, they may allocate an alarm budget, such as the top 5\% or 10\% highest-risk windows, or choose an operating point that captures a target fraction of severe events. In this setting, a model with modest precision can still be valuable if it concentrates many events into a small set of windows.
+
+From a system perspective, the proposed approach can be placed before heavier adaptation mechanisms. A gateway or network server could score recent windows and raise a warning when the ranked risk exceeds a local operating point. The warning could trigger closer observation, temporary logging, inspection of frequency/channel distribution, or application-level buffering. The approach is therefore best interpreted as an operational awareness component rather than as a closed-loop control policy.
+
+The study has limitations. It reflects a single urban LoED deployment with nine gateways and cannot establish generalization to other environments. The labels capture CRC success-rate drops but do not identify their physical or network-layer cause, and the observable precursor associations are descriptive rather than causal. Calibration improves under temporal holdout but remains gateway-dependent. The streaming experiment is an offline replay that excludes packet aggregation and target gateway hardware. Finally, the small number of binary-test gateways limits the power of corrected LOGO comparisons.
+
+Although the replay supports the computational feasibility of window-level scoring, a live deployment would still need to address raw-packet aggregation, missing windows, model and threshold updates, persistent storage and alarm fatigue. These issues define the next engineering step: prospective validation on gateway hardware with feedback from operators or automatic network-management actions.
+
+\section{Conclusions}\label{s:6}
+We presented a gateway-observable next-window warning formulation for LoRaWAN link degradation. Five-minute LoED gateway-windows were used to predict CRC success-rate drops of 10\% and 20\%. LR achieved chronological PR-AUC values of 0.562 and 0.360 and significantly exceeded RF and XGBoost after correction for multiple comparisons. LR also produced the highest observed LOGO means, although the limited gateway count did not support a claim of statistical superiority.
+
+A 10\% chronological alarm budget captures 55.0\% of moderate and 85.3\% of severe events. CRC ablations show that the classifier does not simply reproduce current CRC, but depends substantially on short-term CRC history; radio-only information is weaker and transfers poorly. Five minutes offers a compromise between warning horizon, packet support and gateway coverage. Leakage-safe sigmoid calibration improves the probability scale, while the offline replay demonstrates low window-level scoring latency and temporal alarm-rate drift.
+
+Gateway-observable metadata may therefore support risk prioritization within deployments represented by LoED. It should not be interpreted as evidence of universal cross-deployment generalization or of a specific physical degradation mechanism. Prospective validation should include raw-packet aggregation on target gateway hardware, independent deployments, periodic calibration monitoring and integration with network-management actions.
+
+\section*{Acknowledgments and Use of AI}
+OpenAI ChatGPT and Codex were used to assist with English-language editing, manuscript restructuring, formatting, code organization and the implementation of supplementary analyses. The authors reviewed the generated code, reran the experiments, checked the numerical outputs and remain responsible for the scientific design, interpretation, accuracy and final content.
+
+\section*{Declaration of Conflicting Interests}
+The authors declare no conflicts of interest.
+
+\section*{Data Availability}
+The LoED dataset is publicly available through the source cited in the references. The preprocessing scripts, analysis code and derived result tables associated with this study are available in a public reproducibility repository at \url{https://github.com/esma6/loed-lorawan-early-warning}.
+
+\begin{thebibliography}{99}
+
+\bibitem{1} LoRa Alliance, ``LoRaWAN L2 1.0.4 Specification'', LoRa Alliance Technical Specification, 2020 (\url{https://lora-alliance.org/resource_hub/lorawan-specification-v1-0-4/}).
+
+\bibitem{2} Semtech Corporation, ``LoRa and LoRaWAN: A Technical Overview'', Technical White Paper, 2019 (\url{https://www.semtech.com/uploads/technology/LoRa/lora-and-lorawan.pdf}).
+
+\bibitem{3} F. Adelantado, X. Vilajosana, P. Tuset-Peiro, B. Martinez, J. Melia-Segui, and T. Watteyne, ``Understanding the Limits of LoRaWAN'', IEEE Communications Magazine, vol. 55, no. 9, pp. 34-40, 2017 (DOI: 10.1109/MCOM.2017.1600613).
+
+\bibitem{4} N. Blenn and F. Kuipers, ``LoRaWAN in the Wild: Measurements from The Things Network'', arXiv:1706.03086, 2017 (\url{https://arxiv.org/pdf/1706.03086}).
+
+\bibitem{5} S. Li, U. Raza, and A. Khan, ``How Agile is the Adaptive Data Rate Mechanism of LoRaWAN?'', 2018 IEEE Global Communications Conference, Abu Dhabi, UAE, pp. 206-212, 2018 (DOI: 10.1109/GLOCOM.2018.8647469).
+
+\bibitem{6} J. Finnegan, R. Farrell, and S. Brown, ``Analysis and Enhancement of the LoRaWAN Adaptive Data Rate Scheme'', IEEE Internet of Things Journal, vol. 7, no. 8, pp. 7171-7180, 2020 (DOI: 10.1109/JIOT.2020.2982745).
+
+\bibitem{7} A. Hoeller, R.D. Souza, S. Montejo-Sanchez, and H. Alves, ``Performance Analysis of Single-Cell Adaptive Data Rate-Enabled LoRaWAN'', IEEE Wireless Communications Letters, vol. 9, no. 6, pp. 911-914, 2020 (DOI: 10.1109/LWC.2020.2975604).
+
+\bibitem{8} L. Bhatia, M. Breza, R. Marfievici, and J.A. McCann, ``Dataset: LoED: The LoRaWAN at the Edge Dataset'', 3rd Workshop on Data Acquisition to Analysis, DATA 2020, pp. 52-53, 2020 (DOI: 10.1145/3419016.3431491; dataset DOI: 10.5281/zenodo.4121430).
+
+\bibitem{9} P. Spadaccino, F.G. Crino, and F. Cuomo, ``LoRaWAN Behaviour Analysis through Dataset Traffic Investigation'', Sensors, vol. 22, no. 7, art. no. 2470, 2022 (DOI: 10.3390/s22072470).
+
+\bibitem{10} G. Cerar, H. Yetgin, M. Mohorcic, and C. Fortuna, ``Machine Learning for Wireless Link Quality Estimation: A Survey'', IEEE Communications Surveys \& Tutorials, vol. 23, no. 2, pp. 696-728, 2021 (DOI: 10.1109/COMST.2021.3053615).
+
+\bibitem{11} G. Cerar, H. Yetgin, M. Mohorcic, and C. Fortuna, ``On Designing a Machine Learning Based Wireless Link Quality Classifier'', 2020 IEEE 31st Annual International Symposium on Personal, Indoor and Mobile Radio Communications, pp. 1-7, 2020 (DOI: 10.1109/PIMRC48278.2020.9217171).
+
+\bibitem{12} Y. Kanto and K. Watabe, ``Wireless Link Quality Estimation Using LSTM Model'', 2024 IEEE Network Operations and Management Symposium (NOMS), pp. 1-5, 2024 (DOI: 10.1109/NOMS59830.2024.10575638).
+
+\bibitem{13} A. Prakash, N. Choudhury, A. Hazarika, and A. Gorrela, ``Effective Feature Selection for Predicting Spreading Factor with ML in Large LoRaWAN-Based Mobile IoT Networks'', 2025 National Conference on Communications, New Delhi, India, 2025 (DOI: 10.1109/NCC63735.2025.10983488).
+
+\bibitem{14} P. Maurya, A. Hazra, P. Kumari, T.B. Sørensen, and S.K. Das, ``A Comprehensive Survey of Data-Driven Solutions for LoRaWAN: Challenges and Future Directions'', ACM Transactions on Internet of Things, vol. 6, no. 1, art. no. 6, pp. 1-36, 2025 (DOI: 10.1145/3711953).
+
+\bibitem{15} S. Hosseinzadeh, M. Ashawa, N. Owoh, H. Larijani, and K. Curtis, ``Explainable Machine Learning for LoRaWAN Link Budget Analysis and Modeling'', Sensors, vol. 24, no. 3, art. no. 860, 2024 (DOI: 10.3390/s24030860).
+
+\bibitem{16} J. Park, S. Samarakoon, M. Bennis, and M. Debbah, ``Wireless Network Intelligence at the Edge'', Proceedings of the IEEE, vol. 107, no. 11, pp. 2204-2239, 2019 (DOI: 10.1109/JPROC.2019.2941458).
+
+\bibitem{17} B.J. Bashar and H. Abdullah, ``Analyzing Performance of Eigenvalue-based Spectrum Sensing within LoRaCog Framework'', Journal of Telecommunications and Information Technology, no. 2, pp. 67-74, 2026 (DOI: 10.26636/jtit.2026.2.2576).
+
+\bibitem{18} T. Chen and C. Guestrin, ``XGBoost: A Scalable Tree Boosting System'', 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, pp. 785-794, 2016 (DOI: 10.1145/2939672.2939785).
+
+\end{thebibliography}
+\def\EndNotes{}
+\wyswietlnotke{1} % display author 1 data
+\wyswietlnotke{2} % display author 2 data
+\wyswietlnotke{3} % display author 3 data
+
+\end{document}

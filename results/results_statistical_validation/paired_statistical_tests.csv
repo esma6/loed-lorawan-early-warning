@@ -1,0 +1,41 @@
+split_type,family,threshold,metric,comparison,difference,ci_low,ci_high,p_raw,test,pairs,p_holm,significant_holm_0_05
+time_based,model_comparison,0.1,PR_AUC,LR-RF,0.12686457305693827,0.10478982374938688,0.1509126933573805,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.1,PR_AUC,LR-XGBoost,0.06607528274704078,0.0503566914050094,0.08222506627315768,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.1,ROC_AUC,LR-RF,0.03417536247333275,0.028490928343058552,0.040170321369238586,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.1,ROC_AUC,LR-XGBoost,0.021262988975386032,0.016743943504460453,0.02604731172068253,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.2,PR_AUC,LR-RF,0.13523777353173322,0.09998559064175543,0.16846428457454984,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.2,PR_AUC,LR-XGBoost,0.056969641498049894,0.029269676099676407,0.08649582789430273,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.2,ROC_AUC,LR-RF,0.03684870651410588,0.028517959843848147,0.04641441363390216,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+time_based,model_comparison,0.2,ROC_AUC,LR-XGBoost,0.02228600924866475,0.01626602845484707,0.029490245189166486,0.0009995002498750624,paired date-cluster bootstrap,57,0.001999000499750125,True
+leave_one_gateway_out,model_comparison,0.1,PR_AUC,LR-RF,0.0334002854401384,-0.00534617343223424,0.0731325396367918,0.1875,exact paired gateway sign-flip,7,0.1875,False
+leave_one_gateway_out,model_comparison,0.1,PR_AUC,LR-XGBoost,0.035385195813241274,0.002167256249244507,0.06592062744321495,0.09375,exact paired gateway sign-flip,7,0.1875,False
+leave_one_gateway_out,model_comparison,0.1,ROC_AUC,LR-RF,0.011115603539845198,-0.032545955293398765,0.04277657164074376,0.640625,exact paired gateway sign-flip,7,0.640625,False
+leave_one_gateway_out,model_comparison,0.1,ROC_AUC,LR-XGBoost,0.019292102443251587,-0.00724122843376686,0.03745200529326566,0.1875,exact paired gateway sign-flip,7,0.375,False
+leave_one_gateway_out,model_comparison,0.2,PR_AUC,LR-RF,0.09129858455939692,0.08111902416219799,0.10147814495659586,0.0625,exact paired gateway sign-flip,5,0.125,False
+leave_one_gateway_out,model_comparison,0.2,PR_AUC,LR-XGBoost,0.05661624591309174,0.04410189096217517,0.07106291885575707,0.0625,exact paired gateway sign-flip,5,0.125,False
+leave_one_gateway_out,model_comparison,0.2,ROC_AUC,LR-RF,0.0414295251567439,0.03336843648489496,0.050823903454355876,0.0625,exact paired gateway sign-flip,5,0.125,False
+leave_one_gateway_out,model_comparison,0.2,ROC_AUC,LR-XGBoost,0.02779340548560607,0.011984375632787958,0.04472241052227035,0.0625,exact paired gateway sign-flip,5,0.125,False
+leave_one_gateway_out,crc_ablation,0.1,PR_AUC,full_features-without_current_crc,-0.00011768167550652565,-0.00025864890886302,1.5898624850936176e-05,0.1875,exact paired gateway sign-flip,7,0.1875,False
+leave_one_gateway_out,crc_ablation,0.1,PR_AUC,full_features-without_current_rolling_crc,0.0342742600522028,0.0016252882489231218,0.06478696108998867,0.078125,exact paired gateway sign-flip,7,0.15625,False
+leave_one_gateway_out,crc_ablation,0.1,PR_AUC,full_features-without_all_crc,0.13655439117190074,0.057580574185619945,0.21862750870391554,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,PR_AUC,full_features-current_crc_only,0.2944476108043722,0.1782894167407433,0.40202762005835513,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,PR_AUC,full_features-current_radio_only,0.24687450264328975,0.13268608452288796,0.3376502065047527,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,PR_AUC,full_features-delayed_radio_only,0.23312656417415842,0.13427219082041436,0.3196750753169691,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,ROC_AUC,full_features-without_current_crc,-1.2852942393900716e-05,-8.99630204711411e-05,7.059162949807352e-05,0.84375,exact paired gateway sign-flip,7,0.84375,False
+leave_one_gateway_out,crc_ablation,0.1,ROC_AUC,full_features-without_current_rolling_crc,0.049086955700555955,0.023425052868434517,0.07548038033063222,0.03125,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,ROC_AUC,full_features-without_all_crc,0.12948256344565828,0.0715567626858865,0.18681690607755133,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,ROC_AUC,full_features-current_crc_only,0.5506287854548527,0.5015838933236344,0.5901113861586799,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,ROC_AUC,full_features-current_radio_only,0.30453402762262743,0.24583947652199103,0.3675224737580716,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.1,ROC_AUC,full_features-delayed_radio_only,0.26048760123804315,0.19231491804706494,0.31278098445618735,0.015625,exact paired gateway sign-flip,7,0.09375,False
+leave_one_gateway_out,crc_ablation,0.2,PR_AUC,full_features-without_current_crc,-0.00012863862779946,-0.00030543782122777197,-1.2204500359458414e-05,0.25,exact paired gateway sign-flip,5,0.5,False
+leave_one_gateway_out,crc_ablation,0.2,PR_AUC,full_features-without_current_rolling_crc,0.027472378724432624,-0.02318574358109854,0.06837524950522986,0.375,exact paired gateway sign-flip,5,0.5,False
+leave_one_gateway_out,crc_ablation,0.2,PR_AUC,full_features-without_all_crc,0.21386058899111965,0.11152912928878637,0.30693143230249403,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,PR_AUC,full_features-current_crc_only,0.30761027542578917,0.26618249151846707,0.3517133923011094,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,PR_AUC,full_features-current_radio_only,0.27398800370719034,0.24518723389320782,0.3027887735211728,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,PR_AUC,full_features-delayed_radio_only,0.25735484431583244,0.20911369351338455,0.3022543864724313,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,ROC_AUC,full_features-without_current_crc,-6.864714831473772e-05,-0.00016822009039862973,-5.753228169069758e-06,0.125,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,ROC_AUC,full_features-without_current_rolling_crc,0.029252309918479623,0.021486698960592632,0.040108397011458054,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,ROC_AUC,full_features-without_all_crc,0.24648779328957682,0.12326804585863449,0.37496936799076747,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,ROC_AUC,full_features-current_crc_only,0.6601831750677989,0.5820822666301998,0.7271956133553138,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,ROC_AUC,full_features-current_radio_only,0.3552413658893604,0.3021267372825488,0.41965570014501663,0.0625,exact paired gateway sign-flip,5,0.375,False
+leave_one_gateway_out,crc_ablation,0.2,ROC_AUC,full_features-delayed_radio_only,0.3425428957388779,0.2879234248924532,0.40769884334038886,0.0625,exact paired gateway sign-flip,5,0.375,False

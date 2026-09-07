@@ -1,0 +1,26 @@
+__pycache__/
+*.py[cod]
+.venv/
+.idea/
+.vscode/
+.DS_Store
+
+# Downloaded and extracted source data
+data/LoED_LoRaWAN_at_edge_dataset.zip
+data/LoED_full_extracted/
+
+# Large intermediate and prediction-level artifacts
+results_reproduced/
+results_window_duration/window_level_*.csv
+results_window_duration/strict_pairs_*.csv
+results_probability_calibration/*predictions*.csv
+results_statistical_validation/*predictions*.csv
+results_streaming_replay/stream_replay_predictions_*.csv
+results_streaming_replay/streaming_latency_detailed.csv
+
+# LaTeX build products
+manuscript/*.aux
+manuscript/*.log
+manuscript/*.out
+manuscript/biblio.tmp
+manuscript/firstpage.aux
