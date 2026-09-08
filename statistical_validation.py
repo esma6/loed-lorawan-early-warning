@@ -39,6 +39,7 @@ THRESHOLDS = (0.10, 0.20)
 METRICS = ("PR_AUC", "ROC_AUC")
 N_TIME_BOOTSTRAP = 2000
 N_LOGO_BOOTSTRAP = 10000
+N_TIME_PERMUTATIONS = 1999
 SEED = 42
 
 
@@ -133,12 +134,35 @@ def interval(values):
     return tuple(np.quantile(values, [0.025, 0.975]))
 
 
-def bootstrap_pvalue(differences):
-    values = np.asarray(differences, dtype=float)
-    values = values[np.isfinite(values)]
-    lower = (np.sum(values <= 0) + 1) / (len(values) + 1)
-    upper = (np.sum(values >= 0) + 1) / (len(values) + 1)
-    return min(1.0, 2 * min(lower, upper))
+def paired_date_cluster_permutation_pvalue(
+    predictions, left, right, metric, rng, n_permutations=N_TIME_PERMUTATIONS
+):
+    """Two-sided paired randomization test with collection date as the swap unit.
+
+    Under the null hypothesis that the two fitted models are exchangeable, all
+    scores belonging to a collection date are swapped as one block.  The global
+    PR-AUC or ROC-AUC is recomputed after every randomization.  This preserves
+    within-date dependence without treating bootstrap confidence limits as a
+    null-hypothesis test.
+    """
+    y = predictions["y_true"].to_numpy()
+    left_score = predictions[left].to_numpy()
+    right_score = predictions[right].to_numpy()
+    date_codes, unique_dates = pd.factorize(predictions["date"], sort=False)
+    observed = abs(
+        metric_value(y, left_score, metric) - metric_value(y, right_score, metric)
+    )
+    exceedances = 0
+    for _ in range(n_permutations):
+        swap_by_date = rng.integers(0, 2, len(unique_dates), dtype=np.int8).astype(bool)
+        swap = swap_by_date[date_codes]
+        perm_left = np.where(swap, right_score, left_score)
+        perm_right = np.where(swap, left_score, right_score)
+        permuted = abs(
+            metric_value(y, perm_left, metric) - metric_value(y, perm_right, metric)
+        )
+        exceedances += permuted >= observed - 1e-15
+    return (exceedances + 1) / (n_permutations + 1)
 
 
 def exact_sign_flip_pvalue(differences):
@@ -183,7 +207,7 @@ def run_time_validation(base, features):
     for threshold in THRESHOLDS:
         data = base.copy()
         data["drop_event"] = (
-            data["crc_success_rate"] - data["next_crc_success_rate"] >= threshold
+            data["crc_success_rate"] - data["next_crc_success_rate"] >= threshold - 1e-12
         ).astype(int)
         dates = sorted(data["date"].unique())
         split = int(len(dates) * 0.70)
@@ -230,8 +254,10 @@ def run_time_validation(base, features):
                     ) - metric_value(predictions["y_true"], predictions[right], metric),
                     "ci_low": low,
                     "ci_high": high,
-                    "p_raw": bootstrap_pvalue(boot_diff),
-                    "test": "paired date-cluster bootstrap",
+                    "p_raw": paired_date_cluster_permutation_pvalue(
+                        predictions, left, right, metric, rng
+                    ),
+                    "test": "paired date-cluster score-swap permutation",
                     "pairs": predictions["date"].nunique(),
                 })
     return pd.concat(prediction_frames, ignore_index=True), pd.DataFrame(ci_rows), pd.DataFrame(comparison_rows)

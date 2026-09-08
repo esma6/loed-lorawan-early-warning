@@ -54,7 +54,7 @@ def main():
 
     for threshold in base.THRESHOLDS:
         data["target"] = ((data.crc_success_rate - data.next_crc_success_rate)
-                          >= threshold).astype(int)
+                          >= threshold - 1e-12).astype(int)
         fit = data[data.date.isin(fit_dates)].copy()
         calibration = data[data.date.isin(calibration_dates)].copy()
         test = data[data.date.isin(test_dates)].sort_values(

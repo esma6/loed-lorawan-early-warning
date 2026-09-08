@@ -1,25 +1,25 @@
 split_type,family,threshold,metric,comparison,difference,ci_low,ci_high,p_raw,test,pairs,p_holm,significant_holm_0_05
-time_based,crc_ablation,0.1,PR_AUC,full_features-current_crc_only,0.43677982631264134,0.4219124743879539,0.4524110946678033,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,PR_AUC,full_features-without_current_crc,1.8626866283288912e-05,-2.1820611634887355e-05,6.256605603816022e-05,0.34165834165834164,paired date-cluster bootstrap,57,0.34165834165834164,False
-time_based,crc_ablation,0.1,PR_AUC,full_features-without_current_rolling_crc,0.05119281489991612,0.03686310530689214,0.0637854727317066,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,PR_AUC,full_features-without_all_crc,0.28553737442427013,0.26815875449947263,0.2999360566101258,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,PR_AUC,full_features-current_radio_only,0.38013659286217255,0.36246847069013716,0.39775485081271944,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,PR_AUC,full_features-delayed_radio_only,0.391711592040636,0.37484124854538114,0.40852628403881314,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,ROC_AUC,full_features-current_crc_only,0.26364064055297776,0.2559936292717174,0.2735754069701955,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,ROC_AUC,full_features-without_current_crc,-2.2141833788680287e-07,-7.479740249199951e-06,6.7839254094759196e-06,0.993006993006993,paired date-cluster bootstrap,57,0.993006993006993,False
-time_based,crc_ablation,0.1,ROC_AUC,full_features-without_current_rolling_crc,0.01947974767945615,0.01467684832741479,0.024034170622077473,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,ROC_AUC,full_features-without_all_crc,0.10595273104640424,0.09447268547236769,0.11707870648760513,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,ROC_AUC,full_features-current_radio_only,0.21171144648844864,0.17882470035585488,0.2459305431992742,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.1,ROC_AUC,full_features-delayed_radio_only,0.2009288428419046,0.18044736474017026,0.22249735899100082,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,PR_AUC,full_features-current_crc_only,0.337635352503767,0.2992178343158812,0.3786360165259917,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,PR_AUC,full_features-without_current_crc,6.446215062072547e-05,-9.593357947234315e-05,0.0004750693617255884,0.4995004995004995,paired date-cluster bootstrap,57,0.4995004995004995,False
-time_based,crc_ablation,0.2,PR_AUC,full_features-without_current_rolling_crc,0.051556836229459335,0.03088786649787357,0.0703239569572347,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,PR_AUC,full_features-without_all_crc,0.2537081394267827,0.21294692749759062,0.2893321147120547,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,PR_AUC,full_features-current_radio_only,0.3044854841273641,0.26610016083766624,0.34418612254014014,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,PR_AUC,full_features-delayed_radio_only,0.32890821401293324,0.2896014549716683,0.3692581972544805,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,ROC_AUC,full_features-current_crc_only,0.3709820898658944,0.35734446343037013,0.3874898680767957,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,ROC_AUC,full_features-without_current_crc,8.175494702333808e-07,-7.3297641283165405e-06,1.0170239093523764e-05,0.7972027972027972,paired date-cluster bootstrap,57,0.7972027972027972,False
-time_based,crc_ablation,0.2,ROC_AUC,full_features-without_current_rolling_crc,0.013261431025356374,0.007676490265160032,0.019552082283559903,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,ROC_AUC,full_features-without_all_crc,0.10502361180197295,0.0879844255130855,0.12034822632338185,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,ROC_AUC,full_features-current_radio_only,0.24050802679802596,0.19555996053591126,0.28153310437374074,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
-time_based,crc_ablation,0.2,ROC_AUC,full_features-delayed_radio_only,0.30789236174819967,0.27036985582479156,0.3403387354775816,0.001998001998001998,paired date-cluster bootstrap,57,0.011988011988011988,True
+time_based,crc_ablation,0.1,PR_AUC,full_features-current_crc_only,0.4380479217477326,0.423004858603845,0.45382157762100245,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,PR_AUC,full_features-without_current_crc,1.5389519557817977e-05,-3.180422187220311e-05,6.757415050981093e-05,0.576,paired date-cluster score-swap permutation,57,0.576,False
+time_based,crc_ablation,0.1,PR_AUC,full_features-without_current_rolling_crc,0.050246826936986344,0.03584716211352413,0.06288291438601311,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,PR_AUC,full_features-without_all_crc,0.28301189218745887,0.2663318247759277,0.2964746522912492,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,PR_AUC,full_features-current_radio_only,0.37951883413403154,0.3609915499944758,0.39743311146723587,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,PR_AUC,full_features-delayed_radio_only,0.3931367061873994,0.37566228998081846,0.410444688511017,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,ROC_AUC,full_features-current_crc_only,0.2639160794868679,0.25639294140074737,0.27360508797462507,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,ROC_AUC,full_features-without_current_crc,-5.344070978408055e-06,-1.1851284468122891e-05,7.739214890639652e-07,0.128,paired date-cluster score-swap permutation,57,0.128,False
+time_based,crc_ablation,0.1,ROC_AUC,full_features-without_current_rolling_crc,0.01929612186394436,0.014615066110708855,0.023657061190579656,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,ROC_AUC,full_features-without_all_crc,0.10515373767136893,0.09438020863760924,0.11556930823475743,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,ROC_AUC,full_features-current_radio_only,0.21180373611033754,0.17892023250803704,0.24608838415352025,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.1,ROC_AUC,full_features-delayed_radio_only,0.20199553763041633,0.1812366634084145,0.2237457400457746,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,PR_AUC,full_features-current_crc_only,0.3448451662822398,0.307257025126429,0.3879216885510818,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,PR_AUC,full_features-without_current_crc,1.1332201578229117e-06,-9.297495183499816e-05,0.00010109198011307024,0.992,paired date-cluster score-swap permutation,57,0.992,False
+time_based,crc_ablation,0.2,PR_AUC,full_features-without_current_rolling_crc,0.049601089941763044,0.029207424189941177,0.06839082856788015,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,PR_AUC,full_features-without_all_crc,0.2555220877493083,0.21940746718750956,0.29282395720093574,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,PR_AUC,full_features-current_radio_only,0.30869774279297946,0.27190404461613615,0.3484588857598776,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,PR_AUC,full_features-delayed_radio_only,0.3361638724722397,0.29726071262562226,0.3787670772503861,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,ROC_AUC,full_features-current_crc_only,0.37348053668903625,0.35941804579638,0.3902681257924379,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,ROC_AUC,full_features-without_current_crc,-2.839186046821318e-06,-1.202207793519483e-05,5.704242280629712e-06,0.667,paired date-cluster score-swap permutation,57,0.667,False
+time_based,crc_ablation,0.2,ROC_AUC,full_features-without_current_rolling_crc,0.01273236819424084,0.007208855148477744,0.01851411025344466,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,ROC_AUC,full_features-without_all_crc,0.10275532262975529,0.08450697936385296,0.11777702630449617,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,ROC_AUC,full_features-current_radio_only,0.24015911259014788,0.19502962313963487,0.2852009782012507,0.001,paired date-cluster score-swap permutation,57,0.006,True
+time_based,crc_ablation,0.2,ROC_AUC,full_features-delayed_radio_only,0.3092705793412842,0.2700753954409813,0.3414129465968186,0.001,paired date-cluster score-swap permutation,57,0.006,True

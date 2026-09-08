@@ -1,4 +1,4 @@
-"""Sensitivity analysis using 1, 5, 10 and 15-minute LoED windows.
+"""Reviewer-requested 1/5/10/15-minute LoED window sensitivity study.
 
 Raw daily CSV files are read once. Each duration uses identical cleaning,
 minimum packet support, strict next-window alignment, feature engineering,
@@ -15,7 +15,8 @@ from crc_ablation_revision import make_lr, metrics
 
 PROJECT_DIR = Path(__file__).resolve().parent
 LOCAL_EXTRACT_DIR = PROJECT_DIR / "data" / "LoED_full_extracted"
-DATA_DIR = LOCAL_EXTRACT_DIR
+EXISTING_EXTRACT_DIR = Path(r"C:\Users\ETU\Downloads\LoED_full_extracted")
+DATA_DIR = LOCAL_EXTRACT_DIR if LOCAL_EXTRACT_DIR.exists() else EXISTING_EXTRACT_DIR
 RESULT_DIR = PROJECT_DIR / "results_window_duration"
 RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -186,7 +187,7 @@ def evaluate_duration(event_base, window):
     for threshold in THRESHOLDS:
         data = event_base.copy()
         data["drop_event"] = (
-            data["crc_success_rate"] - data["next_crc_success_rate"] >= threshold
+            data["crc_success_rate"] - data["next_crc_success_rate"] >= threshold - 1e-12
         ).astype(int)
         dates = sorted(data["date"].unique())
         split = int(len(dates) * 0.70)

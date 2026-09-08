@@ -29,6 +29,7 @@ temporal-resolution, precursor, sequence-model and offline replay analyses.
 ├── streaming_replay_experiment.py
 ├── physical_precursor_analysis.py
 ├── temporal_sequence_models.py
+├── operating_point_analysis.py  # Alarm budgets and fixed-recall operating points
 ├── requirements.txt
 └── CITATION.cff
 ```
@@ -74,6 +75,7 @@ python gateway_results_artifacts.py
 python streaming_replay_experiment.py
 python physical_precursor_analysis.py
 python temporal_sequence_models.py
+python operating_point_analysis.py
 ```
 
 The first command performs raw-data processing and creates the shared

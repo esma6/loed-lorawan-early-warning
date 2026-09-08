@@ -1,6 +1,7 @@
 # ============================================================
-# LoED full-dataset experiment pipeline
-# Gateway-level early warning of LoRaWAN link degradation
+# LoED FULL DATASET
+# Edge-Level Early Warning of Link Degradation in LoRaWAN IoT
+# Sıfırdan tam çalışan kod
 # ============================================================
 
 import os
@@ -33,17 +34,24 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 # ============================================================
-# 1. Configuration
+# 1. AYARLAR
 # ============================================================
 
 PROJECT_DIR = Path(__file__).resolve().parent
 DATA_DIR = PROJECT_DIR / "data"
 ZIP_PATH = DATA_DIR / "LoED_LoRaWAN_at_edge_dataset.zip"
 
-# All generated artifacts remain inside the repository regardless of the
-# shell's current working directory.
+# All generated artifacts stay inside this revision project regardless of the
+# shell's current working directory. To avoid duplicating the 398 MB archive
+# on a nearly full disk, reuse the existing extracted dataset read-only when
+# the project-local extraction has not yet been created.
 LOCAL_EXTRACT_DIR = DATA_DIR / "LoED_full_extracted"
-EXTRACT_DIR = LOCAL_EXTRACT_DIR
+EXISTING_EXTRACT_DIR = Path(r"C:\Users\ETU\Downloads\LoED_full_extracted")
+EXTRACT_DIR = (
+    LOCAL_EXTRACT_DIR
+    if LOCAL_EXTRACT_DIR.exists() or not EXISTING_EXTRACT_DIR.exists()
+    else EXISTING_EXTRACT_DIR
+)
 RESULT_DIR = PROJECT_DIR / "results_reproduced"
 RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -59,7 +67,7 @@ RESET_EXTRACT = False
 
 
 # ============================================================
-# 2. Optional XGBoost availability
+# 2. XGBOOST VAR MI KONTROL ET
 # ============================================================
 
 try:
@@ -72,7 +80,7 @@ except Exception:
 
 
 # ============================================================
-# 3. Extract the source archive
+# 3. FULL ZIP DOSYASINI AÇ
 # ============================================================
 
 if RESET_EXTRACT and EXTRACT_DIR.exists():
@@ -596,7 +604,7 @@ for drop_threshold in DROP_THRESHOLDS:
 
     event_data["drop_event"] = (
         (event_data["crc_success_rate"] - event_data["next_crc_success_rate"])
-        >= drop_threshold
+        >= drop_threshold - 1e-12
     ).astype(int)
 
     print("\n" + "=" * 90)
@@ -923,7 +931,7 @@ for feature_setting, feature_cols_variant in feature_sets_for_ablation.items():
 
         event_data["drop_event"] = (
             (event_data["crc_success_rate"] - event_data["next_crc_success_rate"])
-            >= drop_threshold
+            >= drop_threshold - 1e-12
         ).astype(int)
 
         print("\n" + "-" * 90)

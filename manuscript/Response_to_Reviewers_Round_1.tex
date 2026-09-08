@@ -1,0 +1,107 @@
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=25mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=black}
+\definecolor{reviewblue}{RGB}{22,76,120}
+\definecolor{responsegreen}{RGB}{24,99,71}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{2em}
+\newcommand{\ReviewerComment}[1]{\par\noindent\textcolor{reviewblue}{\textbf{Reviewer comment (summary).}} #1\par}
+\newcommand{\AuthorResponse}[1]{\par\noindent\textcolor{responsegreen}{\textbf{Response.}} #1\par}
+\newcommand{\Location}[1]{\par\noindent\textbf{Location in the revised manuscript:} #1\par}
+\begin{document}
+
+\begin{center}
+{\Large\bfseries Response to Reviewer -- Round 1}\par
+\vspace{6pt}
+{\large Gateway-Level Early Warning of LoRaWAN Link Degradation Using LoED Measurements}\par
+\vspace{4pt}
+Manuscript ID: 2789
+\end{center}
+
+\hrule
+\vspace{10pt}
+
+Dear Editor and Reviewer,
+
+We thank the reviewer for the careful and constructive assessment. The manuscript has been substantially revised while preserving the original scientific scope. The revised study adds clustered uncertainty estimates and paired randomization tests, expanded CRC ablations, temporal-resolution sensitivity, per-gateway reporting, probability calibration, gateway-observable precursor analysis, explicit temporal-model comparisons, and a strictly chronological offline streaming replay. Claims have also been narrowed to the LoED deployment, and ranking performance is now distinguished from calibrated probability estimation. The responses below describe each change and identify its location in the revised manuscript.
+
+\section*{Comment 1: Novelty and technical depth}
+\ReviewerComment{The novelty is moderate because the learning algorithms are standard; the contribution lies mainly in the formulation, feature construction, real data and alarm-budget analysis. Stronger statistical validation and broader comparisons are needed.}
+\AuthorResponse{We agree and have moderated the novelty claim. The contribution is now positioned as a strict next-window warning formulation, gateway-observable feature design, leakage-controlled evaluation and alarm-oriented operational analysis rather than as a new learning algorithm. Statistical inference, CRC and temporal-resolution sensitivity studies, calibration, per-gateway analysis, temporal-model comparisons and offline replay have been incorporated.}
+\Location{Introduction; Section 3.6; Sections 4.6--4.12; Discussion.}
+
+\section*{Comment 2: Generalization from one deployment}
+\ReviewerComment{The study uses one LoED deployment with nine gateways, and performance decreases on unseen gateways.}
+\AuthorResponse{We agree that an independent deployment is required for a broad generalization claim. The revised manuscript reports gateway-bootstrap intervals and individual held-out-gateway results. Moderate-event prevalence ranges from 0.8\% to 30.3\% across evaluable gateways, and default-threshold recall varies markedly. Logistic Regression has the highest observed mean LOGO performance, but paired differences are not statistically significant after Holm correction. The manuscript therefore limits inference to deployments represented by LoED and recommends local calibration and threshold monitoring.}
+\Location{Sections 4.2 and 4.6; Fig. 4; Discussion; Conclusions.}
+
+\section*{Comment 3: Dependence on current and historical CRC}
+\ReviewerComment{The paper should establish whether the model predicts future degradation or merely extrapolates the current reliability state.}
+\AuthorResponse{Seven feature settings were evaluated: full features, current CRC only, without current CRC, without current and rolling CRC, without all CRC-derived features, current radio only and delayed radio only. Removing current CRC alone does not materially change chronological or LOGO ranking. Removing all CRC history lowers chronological PR-AUC from 0.563 to 0.280 at the 0.10 threshold and from 0.367 to 0.112 at the 0.20 threshold; both reductions remain significant after Holm correction (adjusted $p=0.006$). Thus, the classifier does not simply copy current CRC, although short-term CRC history supplies a substantial share of its predictive information. LOGO effects have the same direction but are underpowered after correction.}
+\Location{Section 3.6; Section 4.7; Tab. 8; Discussion and Conclusions.}
+
+\section*{Comment 4: Confidence intervals and significance testing}
+\ReviewerComment{Confidence intervals, standard deviations, paired tests and fold-variation analysis are missing.}
+\AuthorResponse{The revised analysis uses date-clustered bootstrap confidence intervals and paired date-cluster score-swap randomization tests for chronological comparisons, together with gateway-bootstrap intervals and exact paired sign-flip tests for LOGO evaluation. Holm correction is applied within each comparison family. Chronologically, LR exceeds RF and XGBoost in PR-AUC and ROC-AUC at both thresholds (adjusted $p\leq0.007$). LOGO means favor LR, but no paired comparison is significant after correction because only seven and five held-out gateways contain both classes. These conclusions are now stated separately.}
+\Location{Section 3.6; Section 4.6; Fig. 4.}
+
+\section*{Comment 5: Alternative window durations}
+\ReviewerComment{Evaluate 1, 5, 10 and 15 minute aggregation windows.}
+\AuthorResponse{The requested sensitivity analysis was performed using identical filtering, packet-support rules and evaluation protocols. One-minute windows yield the highest chronological PR-AUC but exclude one gateway and provide a shorter warning horizon. Five-minute windows retain all nine gateways and give the most stable severe-event LOGO PR-AUC. Fifteen-minute aggregation makes severe events rare and substantially weakens performance. Five minutes is therefore retained as an operational compromise rather than claimed as a universal optimum.}
+\Location{Section 3.6; Section 4.8; Tab. 10.}
+
+\section*{Comment 6: Individual gateway performance}
+\ReviewerComment{Report results separately for individual gateways.}
+\AuthorResponse{An anonymized per-gateway table and a model-by-gateway PR-AUC heatmap have been added to the manuscript. The results show large prevalence and recall differences. On two rare-event gateways, LR retains non-random ranking but detects no events at the default threshold, directly illustrating the need for gateway-specific operating points.}
+\Location{Section 4.6; Fig. 4; Tab. 9 and the associated fold-level discussion.}
+
+\section*{Comment 7: Probability calibration}
+\ReviewerComment{Add reliability diagrams, Brier score and expected calibration error.}
+\AuthorResponse{All three analyses are now included. Raw class-balanced model outputs systematically overestimate absolute risk. For severe chronological degradation, prevalence is 2.08\%, whereas the mean raw LR score is 23.43\%. Leakage-safe temporal sigmoid and isotonic calibration were therefore learned using development dates only. Sigmoid calibration reduces chronological ECE to 0.019 and 0.003 for the moderate and severe outcomes, with Brier scores of 0.063 and 0.017. Calibration also improves under LOGO evaluation but remains gateway-dependent. The revised manuscript consistently distinguishes ranking scores from calibrated probabilities.}
+\Location{Section 3.6; Section 4.9; Fig. 5; Discussion and Conclusions.}
+
+\section*{Comment 8: Prediction versus state tracking}
+\ReviewerComment{Clarify whether the model genuinely anticipates degradation rather than tracks present state.}
+\AuthorResponse{The expanded CRC ablations directly address this distinction. Current CRC alone is weak, and removing it from the complete model has negligible effect; removing all CRC history causes a large reduction. The model is therefore described as a short-horizon state-and-context predictor that uses recent CRC dynamics, radio context and traffic information, not as a current-state threshold rule or as a predictor of a newly identified physical failure mechanism.}
+\Location{Section 4.7; Discussion; Conclusions.}
+
+\section*{Comment 9: Prospective or online evaluation}
+\ReviewerComment{Include a prospective or online experiment with latency and alarm-rate requirements.}
+\AuthorResponse{A live deployment was unavailable, so a strictly chronological offline streaming replay was performed and this limitation is stated explicitly. The replay processes 35,776 held-out windows in timestamp order. Preprocessing, LR scoring and sigmoid calibration require 4.29--4.90 ms per timestamp batch on average; P99 latency is 9.05--14.75 ms. Nominal 10\% development-period alarm thresholds produce realized test alert rates of 5.5\% and 6.7\%, revealing temporal operating-point drift. Packet ingestion and raw-window aggregation are excluded, and the experiment is not presented as a prospective field trial.}
+\Location{Section 3.6; Section 4.12; Discussion; Conclusions.}
+
+\section*{Comment 10: Additional temporal models}
+\ReviewerComment{Consider models that explicitly exploit sequential dependencies.}
+\AuthorResponse{The submitted LR was compared with a six-window autoregressive LR and a compact GRU using 30 minutes of exactly contiguous history. The GRU improves chronological PR-AUC by only 0.004--0.006 and does not improve severe-event LOGO performance. Sequence LR raises severe-event LOGO PR-AUC from 0.385 to 0.415 but reduces moderate-event performance. Because gains are setting-specific rather than consistent, the compact LR remains the primary model.}
+\Location{Section 3.6; Section 4.11; Fig. 7; Conclusions.}
+
+\section*{Comment 11: Physical interpretation}
+\ReviewerComment{Provide a deeper analysis of physical causes.}
+\AuthorResponse{Gateway-standardized precursor comparisons have been added. Lower packet count and frequency diversity are associated with subsequent degradation; RSSI and SNR effects are weaker, whereas recent CRC dynamics are strongest. Packet-size differences may reflect traffic composition. Since LoED does not directly measure interference, collisions, mobility, weather or hardware state, the analysis remains descriptive and avoids unsupported causal attribution.}
+\Location{Section 3.6; Section 4.10; Fig. 6; Discussion.}
+
+\section*{Comment 12: Interpretation of PR-AUC and alarm precision}
+\ReviewerComment{Explain why the severe-event PR-AUC is meaningful relative to rare-event prevalence and interpret precision at a 10\% alarm budget.}
+\AuthorResponse{After applying the numerically stable ``at least threshold'' label comparison, the revised values are PR-AUC 0.367 and a 2.08\% chronological-test prevalence. At a 10\% alarm budget, 17.8\% precision means that approximately one in six selected windows precedes a severe event, while 85.8\% of severe events are captured. Both the risk-concentration benefit and the remaining false-alarm review burden are reported.}
+\Location{Section 4.4; Fig. 2; Tabs. 6--7.}
+
+\section*{Comment 13: Style, repetition and terminology}
+\ReviewerComment{Reduce formulaic wording and repetition and standardize technical terminology.}
+\AuthorResponse{The manuscript now uses \emph{gateway-observable}, \emph{degradation warning}, \emph{CRC success rate} and \emph{gateway-window} consistently. Repeated claims concerning gateway-only inputs, lightweight LR and LOGO degradation have been consolidated across the Introduction, Methods, Results, Discussion and Conclusions. Evaluative phrases have been replaced by explicit operational or statistical consequences, and a complete English-language and terminology review has been performed.}
+\Location{Throughout the revised manuscript.}
+
+\vspace{8pt}
+We appreciate the reviewer's comments, which helped improve the statistical support, reproducibility and scope of the manuscript.
+
+\vspace{10pt}
+Sincerely,\\
+The Authors
+
+\end{document}

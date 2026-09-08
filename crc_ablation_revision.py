@@ -205,7 +205,7 @@ def main():
         event_data = base.copy()
         event_data["drop_event"] = (
             event_data["crc_success_rate"] - event_data["next_crc_success_rate"]
-            >= threshold
+            >= threshold - 1e-12
         ).astype(int)
 
         dates = sorted(event_data["date"].unique())

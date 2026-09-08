@@ -47,7 +47,7 @@ def main():
     gateway_rows = []
     for threshold in base.THRESHOLDS:
         data["event"] = ((data.crc_success_rate - data.next_crc_success_rate)
-                         >= threshold).astype(int)
+                         >= threshold - 1e-12).astype(int)
         for feature in FEATURES:
             z = f"z_{feature}"
             valid = data[["gateway", "event", feature, z]].dropna()

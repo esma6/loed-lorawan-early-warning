@@ -82,7 +82,7 @@ def main():
     for threshold in base.THRESHOLDS:
         for frame in (development, chronological_test, data):
             frame["target"] = ((frame.crc_success_rate - frame.next_crc_success_rate)
-                               >= threshold).astype(int)
+                               >= threshold - 1e-12).astype(int)
         fit, calibration = temporal_parts(development)
         print(f"TIME recalibration threshold={threshold:.2f}", flush=True)
         rows, bins, preds = evaluate("Time", threshold, "", fit, calibration,

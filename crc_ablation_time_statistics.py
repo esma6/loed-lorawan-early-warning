@@ -12,7 +12,7 @@ from crc_ablation_revision import (
     make_lr,
     prepare_event_data,
 )
-from statistical_validation import holm_adjust
+from statistical_validation import holm_adjust, paired_date_cluster_permutation_pvalue
 
 
 PROJECT_DIR = Path(__file__).resolve().parent
@@ -22,6 +22,7 @@ RESULT_DIR.mkdir(parents=True, exist_ok=True)
 THRESHOLDS = (0.10, 0.20)
 METRICS = ("PR_AUC", "ROC_AUC")
 N_BOOTSTRAP = 1000
+N_PERMUTATIONS = 999
 SEED = 2026
 
 
@@ -31,13 +32,6 @@ def score_metric(y, score, metric):
         if metric == "PR_AUC"
         else roc_auc_score(y, score)
     )
-
-
-def pvalue(values):
-    values = np.asarray(values)
-    lower = (np.sum(values <= 0) + 1) / (len(values) + 1)
-    upper = (np.sum(values >= 0) + 1) / (len(values) + 1)
-    return min(1.0, 2 * min(lower, upper))
 
 
 def main():
@@ -52,7 +46,7 @@ def main():
     for threshold in THRESHOLDS:
         data = base.copy()
         data["drop_event"] = (
-            data["crc_success_rate"] - data["next_crc_success_rate"] >= threshold
+            data["crc_success_rate"] - data["next_crc_success_rate"] >= threshold - 1e-12
         ).astype(int)
         dates = sorted(data["date"].unique())
         split = int(len(dates) * 0.70)
@@ -120,8 +114,11 @@ def main():
                     ) - score_metric(predictions["y_true"], predictions[variant], metric),
                     "ci_low": low,
                     "ci_high": high,
-                    "p_raw": pvalue(differences),
-                    "test": "paired date-cluster bootstrap",
+                    "p_raw": paired_date_cluster_permutation_pvalue(
+                        predictions, "full_features", variant, metric, rng,
+                        n_permutations=N_PERMUTATIONS,
+                    ),
+                    "test": "paired date-cluster score-swap permutation",
                     "pairs": len(unique_dates),
                 })
 

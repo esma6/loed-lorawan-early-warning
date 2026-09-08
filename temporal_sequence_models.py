@@ -153,7 +153,7 @@ def main():
     rows = []
     for threshold in base.THRESHOLDS:
         data["target"] = ((data.crc_success_rate - data.next_crc_success_rate)
-                          >= threshold).astype(int)
+                          >= threshold - 1e-12).astype(int)
         train = data[data.date.isin(train_dates)]
         test = data[data.date.isin(test_dates)]
         for name, function, columns in [
