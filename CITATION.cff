@@ -17,3 +17,26 @@ authors:
 repository-code: "https://github.com/esma6/loed-lorawan-early-warning"
 date-released: 2026-09-07
 version: 1.0.0
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Karagülle
+      given-names: Esma Fazilet
+      orcid: "https://orcid.org/0009-0002-7225-9970"
+    - family-names: Günay
+      given-names: Faruk Baturalp
+      orcid: "https://orcid.org/0000-0001-5472-3608"
+    - family-names: Odabaş Yıldırım
+      given-names: Esra
+      orcid: "https://orcid.org/0000-0002-0936-1342"
+  title: "Gateway-level Early Warning of LoRaWAN Link Degradation Using LoED Measurements"
+  journal: "Journal of Telecommunications and Information Technology"
+  volume: "106"
+  issue: "4"
+  start: 24
+  end: 34
+  year: 2026
+  month: 10
+  date-published: 2026-10-29
+  doi: "10.26636/jtit.2026.4.2789"
+  url: "https://jtit.pl/jtit/article/view/2789"
