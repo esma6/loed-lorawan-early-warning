@@ -6,6 +6,14 @@ LoED Measurements.”** It is organized to support independent reproduction of
 the chronological, leave-one-gateway-out (LOGO), ablation, calibration,
 temporal-resolution, precursor, sequence-model and offline replay analyses.
 
+## Publication
+
+Published in *Journal of Telecommunications and Information Technology*,
+vol. 106, no. 4, pp. 24–34, on 29 October 2026.
+
+**DOI:** [10.26636/jtit.2026.4.2789](https://doi.org/10.26636/jtit.2026.4.2789)
+— [Journal article](https://jtit.pl/jtit/article/view/2789)
+
 ## Authors
 
 - Esma Fazilet Karagülle — Department of Computer Engineering, Atatürk University — [ORCID](https://orcid.org/0009-0002-7225-9970)
@@ -118,9 +126,31 @@ xelatex -interaction=nonstopmode -halt-on-error JTIT_LoED_LoRaWAN_revision.tex
 
 ## Citation
 
-Citation metadata are provided in [`CITATION.cff`](CITATION.cff). Until the
-article receives final bibliographic metadata, cite the title, authors and this
-repository URL together with an access date.
+If you use this software or its results, please cite the associated article:
+
+E. F. Karagülle, F. B. Günay, and E. O. Yıldırım,
+“Gateway-level Early Warning of LoRaWAN Link Degradation Using LoED Measurements,”
+*Journal of Telecommunications and Information Technology*, vol. 106, no. 4,
+pp. 24–34, October 2026.
+[doi:10.26636/jtit.2026.4.2789](https://doi.org/10.26636/jtit.2026.4.2789).
+
+```bibtex
+@article{karagulle2026gateway,
+  author  = {Karagülle, Esma Fazilet and Günay, Faruk Baturalp and Odabaş Yıldırım, Esra},
+  title   = {Gateway-level Early Warning of {LoRaWAN} Link Degradation Using {LoED} Measurements},
+  journal = {Journal of Telecommunications and Information Technology},
+  year    = {2026},
+  month   = oct,
+  volume  = {106},
+  number  = {4},
+  pages   = {24--34},
+  doi     = {10.26636/jtit.2026.4.2789},
+  url     = {https://doi.org/10.26636/jtit.2026.4.2789}
+}
+```
+
+Machine-readable citation metadata, including the preferred article citation,
+are provided in [`CITATION.cff`](CITATION.cff).
 
 ## Reproducibility scope
 
